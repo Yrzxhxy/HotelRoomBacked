@@ -1,3 +1,4 @@
+import re
 from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
@@ -57,7 +58,21 @@ class GuestInfoBase(BaseModel):
 
 class GuestInfoCreate(GuestInfoBase):
     """办理入住时的请求数据"""
-    pass
+    
+    @field_validator('idCard')
+    @classmethod
+    def validate_id_card(cls, v):
+        # 匹配18位身份证号 (17位数字+最后一位数字或X)
+        if not re.match(r'^\d{17}[\dXx]$', v):
+            raise ValueError('身份证号必须为18位数字(最后一位可为X)')
+        return v
+
+    @field_validator('phoneNum')
+    @classmethod
+    def validate_phone(cls, v):
+        if v and not re.match(r'^1[3-9]\d{9}$', v):
+            raise ValueError('手机号格式不正确，必须为11位数字')
+        return v
 
 class GuestInfoUpdate(BaseModel):
     """办理退房或更新信息时的请求数据"""
